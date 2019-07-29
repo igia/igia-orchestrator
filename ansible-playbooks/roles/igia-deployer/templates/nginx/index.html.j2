@@ -1,0 +1,196 @@
+<!--
+
+    This Source Code Form is subject to the terms of the Mozilla Public License, v.
+    2.0 with a Healthcare Disclaimer.
+    A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+    be found under the top level directory, named LICENSE.
+    If a copy of the MPL was not distributed with this file, You can obtain one at
+    http://mozilla.org/MPL/2.0/.
+    If a copy of the Healthcare Disclaimer was not distributed with this file, You
+    can obtain one at the project website https://github.com/igia.
+
+    Copyright (C) 2018-2019 Persistent Systems, Inc.
+
+-->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>igia: An open-source platform for developing and deploying healthcare technology.</title>
+    <!-- Material Design for Bootstrap fonts and icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
+	<link rel="shortcut icon" href="./assets/favicon.ico" />
+    <!-- Material Design for Bootstrap CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.1.1/dist/css/bootstrap-material-design.min.css"
+        integrity="sha384-wXznGJNEXNG1NFsbm0ugrLFMQPWswR3lds2VeinahP8N0zJw9VWSopbjv2x7WCvX" crossorigin="anonymous">
+    <style>
+        .logo-img {
+            width: 40px
+        }
+
+        .igia-img {
+            width: 60px
+        }
+
+        .navbar {
+            padding: 0.2rem 1rem;
+            background-color: #fff !important;
+            border-bottom: 2px solid #e6e6e6;
+            min-height: 57px !important;
+            z-index: 1000;
+            position: fixed;
+            top: 0;
+            width: 100%;
+        }
+
+        .navbar-title {
+            padding-right: 1rem;
+        }
+
+        .navbar-subtitle {
+            font-size: 0.85em;
+            margin-top: 0.8rem;
+        }
+
+        .row {
+            margin-top: 1rem;
+        }
+
+        .card-header {
+            background: #45b0a6 !important;
+            color: #fff;
+        }
+
+        .card-header .logo-img {
+            height: 2em;
+            vertical-align: bottom;
+        }
+
+        .card-header .card-title {
+            margin: 0;
+            display: inline-block;
+            font-size: 1.2rem !important;
+            font-weight: 400 !important;
+        }
+
+        .card-body {
+            padding-bottom: 0rem;
+            height: 7rem;
+			overflow: auto;
+        }
+
+        .card-footer {
+            border: none;
+        }
+
+        html,
+        body {
+            padding: 0;
+            min-height: 100%;
+            min-width: 350px;
+            font-family: 'Roboto', 'Helvetica', 'Arial';
+        }
+
+        body {
+            background-color: #f2f2f2 !important;
+            overflow-x: auto;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .jh-card {
+            border: none;
+            padding: 1.2rem;
+        }
+
+        .main-view {
+            padding-top: 70px;
+            padding-bottom: 75px;
+            height: 100%;
+        }
+
+        .footer {
+            background: #194457;
+            color: #fff;
+            position: absolute;
+            bottom: 0;
+            height: 4rem;
+            width: 100%;
+            max-width: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- header -->
+    <nav class="navbar navbar-light navbar-expand-md">
+        <div class="navbar-brand logo">
+            <img src="./assets/logo.png" class="logo-img" alt="logo" />
+        </div>
+        <div class="navbar-title">
+            <img src="./assets/igia-name.png" class="igia-img" alt="logo" />
+        </div>
+        <div class="navbar-subtitle">An open-source platform for developing and deploying healthcare technology</div>
+    </nav>
+    <!-- end of header -->
+    <!-- main content starts -->
+    {% set cols_per_row = 3 %}
+
+    <div class="container-fluid main-view">
+        <div class="jh-card card">
+            {% for component_group in igia_component_groups %}
+            <section class="pb-4">
+                <h5 class="mb-0">{{ component_group.label }}</h5>
+                {% for component in igia_components|selectattr('igia_component_group','equalto',component_group.name)
+                %}
+                {% if loop.index0 % cols_per_row == 0 %}
+                <div class="row">
+                    {% endif %}
+                    <div class="col-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">{{ component.label }}</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text"> {{ component.description }}</p>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <fieldset {% if not component.enabled|bool %} disabled {% endif %}>
+                                    <a href="{{ component.launch_url }}" class="btn btn-primary" target="_blank">Launch</a>
+                                </fieldset>
+                            </div>
+                        </div>
+                    </div>
+                    {% if (loop.index0 +1) % cols_per_row == 0 %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </section>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- main content end -->
+    <!-- footer start -->
+    <footer class="footer d-flex align-items-center">
+        <div class="container-fluid">
+            <span class="d-flex justify-content-center">
+                &copy;&nbsp;
+                <span>2018-2019</span>&nbsp;
+                <span>Persistent Systems</span>
+            </span>
+        </div>
+    </footer>
+    <!-- footer end -->
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U"
+        crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/bootstrap-material-design@4.1.1/dist/js/bootstrap-material-design.js" integrity="sha384-CauSuKpEqAFajSpkdjv3z9t8E7RlpJ1UP0lKM/+NdtSarroVKu069AlsRPKkFBz9"
+        crossorigin="anonymous"></script>
+    <script>$(document).ready(function () { $('body').bootstrapMaterialDesign(); });</script>
+</body>
+
+</html>

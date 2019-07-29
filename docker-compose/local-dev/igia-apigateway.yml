@@ -1,0 +1,50 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+version: '3.2'
+services:
+    apigtw-app:
+        image: igia/igia-apigateway
+        environment:
+            - 'SPRING_PROFILES_ACTIVE=prod,swagger'
+            - 'EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/eureka'
+            - 'SPRING_CLOUD_CONFIG_URI=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/config'
+            - 'SPRING_DATASOURCE_URL=jdbc:postgresql://apigtw-postgresql:5432/apigtw'
+            - 'SECURITY_OAUTH2_CLIENT_ACCESS_TOKEN_URI=${KEYCLOAK_URL:-http://keycloak:9080}/auth/realms/igia/protocol/openid-connect/token'
+            - 'SECURITY_OAUTH2_CLIENT_USER_AUTHORIZATION_URI=${KEYCLOAK_URL:-http://keycloak:9080}/auth/realms/igia/protocol/openid-connect/auth'
+            - SECURITY_OAUTH2_CLIENT_CLIENT_ID=${OAUTH2_CLIENT_ID_APIGTW:-web_app}
+            - SECURITY_OAUTH2_CLIENT_CLIENT_SECRET=${OAUTH2_CLIENT_SECRET_APIGTW:-web_app}
+            - SECURITY_OAUTH2_CLIENT_SCOPE=openid profile email
+            - 'SECURITY_OAUTH2_RESOURCE_USER_INFO_URI=${KEYCLOAK_URL:-http://keycloak:9080}/auth/realms/igia/protocol/openid-connect/userinfo'
+            - JHIPSTER_SLEEP=30
+            - JHIPSTER_REGISTRY_PASSWORD=${JHIPSTER_REGISTRY_PASSWORD:-admin}
+            - JHIPSTER_LOGGING_LOGSTASH_ENABLED=${LOGGING_LOGSTASH_ENABLED:-false}
+            - SPRING_ZIPKIN_ENABLED=${TRACING_ZIPKIN_ENABLED:-false}
+            - '_JAVA_OPTIONS=-Xmx400m'
+        ports:
+            - "${APIGTW_PORT:-8088}:8088"
+        depends_on:
+            - jhipster-registry
+
+#    jhipster-registry:
+#        extends:
+#            file: jhipster-registry.yml
+#            service: jhipster-registry
+#    keycloak:
+#        extends:
+#            file: keycloak.yml
+#            service: keycloak
+#    portainer:
+#        extends:
+#            file: portainer.yml
+#            service: portainer

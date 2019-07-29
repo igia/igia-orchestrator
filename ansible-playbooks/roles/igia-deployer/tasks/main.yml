@@ -1,0 +1,125 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+# tasks for igia-deployer
+- import_tasks: check-prereq-docker.yml
+  tags:
+    - prereq
+    - build
+    - deploy
+
+- import_tasks: check-prereq-dockercompose.yml
+  when: deploy_env == 'docker'
+  tags:
+    - prereq
+    - deploy
+
+- import_tasks: check-prereq-jdk.yml
+  tags:
+    - prereq
+    - build
+
+- import_tasks: check-prereq-git.yml
+  tags:
+    - prereq
+    - fetch
+
+- include_tasks: prereq-activemq-generate-ssl.yml
+  vars:
+    activemq_config_dir: "{{ playbook_dir }}/../docker-compose/local-dev/activemq-config"
+  when: '"activemq" in selected_optional_components and activemq_generate_new_ssl'
+  tags: prereq
+
+- vars:
+    projects: "{{ item }}"
+  include_tasks: fetch-apps.yml
+  loop: "{{ apps | selectattr('app_name','in', mandatory_components + selected_optional_components)| batch(6) | list }}"
+  tags:
+    - fetch
+
+- vars:
+    projects: "{{ item }}"
+  include_tasks: build-apps.yml
+  loop: "{{ apps | selectattr('app_name','in', mandatory_components + selected_optional_components) | batch(2) | list }}"
+  tags:
+    - build
+
+- include_tasks: deploy-{{ deploy_env }}.yml
+  vars:
+    components: "{{ mandatory_components + selected_optional_components }}"
+  tags: deploy
+
+- name: Wait 360 seconds for Gateway to be accessible
+  vars:
+    components: "{{ mandatory_components + selected_optional_components }}"
+    application: "igia-apigateway"
+  when: 'application in components'
+  uri:
+    url: http://localhost:8088/management/health
+    return_content: yes
+  register: result
+  until: result['status']|default(0) == 200
+  delay: 20
+  retries: 18
+  ignore_errors: yes
+  tags:
+    - deploy
+    - verify
+
+- name: Wait 360 seconds for Keycloak to be accessible
+  uri:
+    url: http://keycloak:9080/auth
+    return_content: yes
+  register: result
+  until: result['status']|default(0) == 200
+  delay: 20
+  retries: 18
+  tags:
+    - deploy
+    - verify
+
+- name: Execute update keycloak
+  command: >
+   docker exec local-dev_keycloak_1 bash \
+     -c "java -cp /opt/jboss/keycloak/modules/system/layers/base/com/h2database/h2/main/h2*.jar org.h2.tools.RunScript \
+         -url 'jdbc:h2:/opt/jboss/keycloak/standalone/data/keycloak;AUTO_SERVER=TRUE' -user sa -password sa \
+        -script /opt/jboss/keycloak/realm-config/update.sql && ./keycloak/bin/kcadm.sh config credentials \
+         --server http://keycloak:9080/auth --realm master --user admin --password admin && \
+         ./keycloak/bin/kcadm.sh  update clients/ed424acd-36ce-433e-bf59-f1f3143faf6f -r igia -s enabled=true --merge"
+  tags:
+    - deploy
+  changed_when: false
+
+- name: Keycloak client update - igia_sample_app
+  keycloak_client:
+    auth_client_id: admin-cli
+    auth_keycloak_url: "http://keycloak:9080/auth"
+    auth_realm: master
+    auth_username: admin
+    auth_password: admin
+    root_url: http://localhost:8055
+    admin_url: http://localhost:8055
+    state: present
+    realm: igia
+    client_id: igia_sample_app
+    public_client: False
+    bearer_only: False
+    client_authenticator_type: client-secret
+    secret: igia_sample_app
+    redirect_uris:
+      - http://localhost:8055/*
+  delegate_to: localhost
+  when: '"cha2ds2-vasc-application" in selected_optional_components'
+  tags:
+    - deploy

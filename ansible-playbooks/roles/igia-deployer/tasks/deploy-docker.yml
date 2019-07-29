@@ -1,0 +1,62 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+- name: generate admin-password hash for portainer
+  import_tasks: helper-portainer-password.yml
+  when: '"portainer" in selected_optional_components'
+  tags: deploy
+
+- name: assert admin-password hash is generated for portainer
+  assert:
+    that:
+      - "portainer_pass_salted | length > 0"
+    fail_msg: "'portainer_pass_salted' not generated"
+  when: '"portainer" in selected_optional_components'
+  tags: deploy
+
+- name: generate index page for Nginx proxy
+  template:
+    src: nginx/index.html.j2
+    dest: "{{ docker_compose_files_path }}/nginx-config/html/index.html"
+
+- name: run docker-compose  # noqa 301
+  command: >
+    docker-compose {% for component in components %} -f {{ component }}.yml {% endfor %}
+      {% if logging_logstash_enabled|bool or tracing_zipkin_enabled|bool  %} -f jhipster-elasticsearch.yml -f jhipster-console.yml {% endif %}
+      {% if logging_logstash_enabled|bool %} -f jhipster-logstash.yml {% endif %}
+      {% if tracing_zipkin_enabled|bool %} -f jhipster-zipkin.yml {% endif %}
+       up -d
+  args:
+    chdir: "{{ docker_compose_files_path }}"
+  environment:
+    # This variable is only used if Keycloak is deployed locally.
+    # - KEYCLOAK_HOSTNAME: "{{ ansible_default_ipv4['address'] }}"
+    # If there is no external keycloak, keycloak is in local machine.
+    # - KEYCLOAK_URL: "{{ configuration.get('igia-keycloak').get('keycloak-url') if configuration is defined and 'igia-keycloak' in configuration else 'http://' + ansible_default_ipv4['address'] + ':9080' | trim }}"
+    - PORTAINER_ADMIN_PASSWORD_SALTED: "{{ portainer_pass_salted if 'portainer' in selected_optional_components else '' }}"
+    - LOGGING_LOGSTASH_ENABLED: "{{ logging_logstash_enabled }}"
+    - TRACING_ZIPKIN_ENABLED: "{{ tracing_zipkin_enabled }}"
+    - ACTIVEMQ_CLIENT_KEYSTORE_PASSWORD: "{{ activemq_client_keystore_password }}"
+    - ACTIVEMQ_CLIENT_TRUSTSTORE_PASSWORD: "{{ activemq_client_keystore_password }}"
+  register: command_output
+  tags: deploy
+
+- debug:
+    msg: "{{ command_output.stderr_lines }}"
+  tags: deploy
+
+- name: Restart proxy (just to make sure all upstream servers are resolved)
+  command: docker restart nginx  # noqa 301
+  tags:
+    - deploy

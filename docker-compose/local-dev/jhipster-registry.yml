@@ -1,0 +1,42 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+version: '3.2'
+services:
+    jhipster-registry:
+        image: jhipster/jhipster-registry:v4.0.4
+        volumes:
+            - ./central-server-config:/central-config
+        # By default the JHipster Registry runs with the "dev" and "native"
+        # Spring profiles.
+        # "native" profile means the filesystem is used to store data, see
+        # http://cloud.spring.io/spring-cloud-config/spring-cloud-config.html
+        environment:
+            - SPRING_PROFILES_ACTIVE=dev,oauth2
+            - JHIPSTER_REGISTRY_PASSWORD=${JHIPSTER_REGISTRY_PASSWORD:-admin}
+            - SPRING_SECURITY_USER_PASSWORD=${JHIPSTER_REGISTRY_PASSWORD:-admin}
+            - SPRING_CLOUD_CONFIG_SERVER_COMPOSITE_0_TYPE=native
+            - SPRING_CLOUD_CONFIG_SERVER_COMPOSITE_0_SEARCH_LOCATIONS=file:./central-config
+            # - SPRING_CLOUD_CONFIG_SERVER_COMPOSITE_0_TYPE=git
+            # - SPRING_CLOUD_CONFIG_SERVER_COMPOSITE_0_URI=https://github.com/jhipster/jhipster-registry/
+            # - SPRING_CLOUD_CONFIG_SERVER_COMPOSITE_0_SEARCH_PATHS=central-config
+            # For Keycloak to work, you need to add '127.0.0.1 keycloak' to your hosts file
+            - SECURITY_OAUTH2_CLIENT_ACCESS_TOKEN_URI=${KEYCLOAK_URL:-http://keycloak:9080}/auth/realms/igia/protocol/openid-connect/token
+            - SECURITY_OAUTH2_CLIENT_USER_AUTHORIZATION_URI=${KEYCLOAK_URL:-http://keycloak:9080}/auth/realms/igia/protocol/openid-connect/auth
+            - SECURITY_OAUTH2_CLIENT_CLIENT_ID=jhipster-registry
+            - SECURITY_OAUTH2_CLIENT_CLIENT_SECRET=${OAUTH2_CLIENT_SECRET_JHIPSTER:-jhipster-registry}
+            - SECURITY_OAUTH2_RESOURCE_USER_INFO_URI=${KEYCLOAK_URL:-http://keycloak:9080}/auth/realms/igia/protocol/openid-connect/userinfo
+            - JHIPSTER_LOGGING_LOGSTASH_ENABLED=${LOGGING_LOGSTASH_ENABLED:-false}
+            - '_JAVA_OPTIONS=-Xmx400m'
+        ports:
+            - "${JHIPSTER_REGISTRY_PORT:-8761}:8761"

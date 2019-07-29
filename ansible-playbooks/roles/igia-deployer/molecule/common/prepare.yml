@@ -1,0 +1,133 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+- name: Prepare
+  hosts: all
+  gather_facts: true
+
+  vars:
+    docker_compose_version: 1.23.2
+
+  roles:
+    - role: geerlingguy.docker
+      docker_package: docker-ce-18.06.1.ce
+      docker_users:
+        - "{{ansible_user}}"
+      docker_install_compose: true     # Set this to false if SSL error
+      become: true
+
+    - role: geerlingguy.java
+      java_packages:
+        - java-1.8.0-openjdk-devel
+      become: true
+
+  tasks:
+    # Pre-reqs for molecule
+    - name: Install python for Ansible
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      become: true
+      changed_when: false
+
+    # Pre-reqs for test
+    - name: Copy docker-compose files
+      copy:
+        src: "{{ playbook_dir }}/../../../../../docker-compose/"
+        dest: '~/docker-compose/'
+
+    # Pre-reqs for igia-Orchestrator
+    - name: Install epel-release (required for pip)
+      package:
+        name: epel-release
+        state: present
+      become: true
+
+    - name: Install pip
+      package:
+        name: python-pip
+        state: present
+      become: true
+
+    - name: Install docker python package
+      pip:
+        name: docker
+      become: true
+
+    # Pre-reqs for igia
+    - name: Installing git client
+      package:
+        name: git
+        state: present
+      become: true
+
+    # Pre-reqs for igia
+    - lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.0\.1'
+        line: '127.0.0.1 keycloak apigtw-app'
+        owner: root
+        group: root
+        mode: 0644
+      become: yes
+
+    # Remove this when JAR files are in central maven repo
+    - name: Ensure Maven setting folder
+      file:
+        path: '~/.m2'
+        state: directory
+        mode: '755'
+
+    - name: Add Maven setting file
+      copy:
+        src: "{{ lookup('env','MOLECULE_M2SETTING_PATH') }}"
+        dest: '~/.m2/settings.xml'
+        mode: '0400'
+
+    # Remove this when source codes are public
+    - name: Ensure SSH key folder
+      file:
+        path: ~/.ssh
+        state: directory
+        mode: '0700'
+
+    - name: Add SSH key which works for Gitlab
+      copy:
+        src: "{{ lookup('env','MOLECULE_SSHKEY_PATH') }}"
+        dest: '~/.ssh/id_rsa'
+        mode: '0400'
+
+    # Workaround: to reflect {{ ansible_user }} in docker
+    - name: reset ssh connection to allow user changes to affect 'current login user'
+      local_action:
+        module: file
+        path: "~/.ansible/cp/{{ ansible_host }}-{{ ansible_port }}-{{ ansible_user }}"
+        state: absent
+      become: false
+
+    # - name: reset ssh connection to allow user changes to affect 'current login user'
+    #   meta: reset_connection
+
+    # - meta: flush_handlers
+
+    - name: Check if portainer can be run
+      command: "docker-compose -f portainer.yml up"
+      args:
+        chdir: '~/docker-compose/local-dev/'
+      register: portainer_result
+
+    # Required for igia-smart-launch-app
+    - name: Installing gcc-c++
+      package:
+        name: gcc-c++
+        state: present
+      become: true

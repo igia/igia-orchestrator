@@ -1,0 +1,55 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+version: '3.2'
+services:
+    integrationconfiguration-app:
+        image: igia/integration-configuration
+        volumes:
+        - ./activemq-config/client.ts:/app/resources/jms/activemq/client.ts
+        - ./activemq-config/client.ks:/app/resources/jms/activemq/client.ks
+        environment:
+            - 'SPRING_PROFILES_ACTIVE=prod,swagger'
+            - 'EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/eureka'
+            - 'SPRING_CLOUD_CONFIG_URI=http://admin:$${jhipster.registry.password}@jhipster-registry:8761/config'
+            - SPRING_DATASOURCE_URL=jdbc:postgresql://integrationconfiguration-postgresql:5432/integrationconfiguration
+            - 'SECURITY_OAUTH2_CLIENT_ACCESS_TOKEN_URI=${KEYCLOAK_URL:-http://keycloak:9080}/auth/realms/igia/protocol/openid-connect/token'
+            - 'SECURITY_OAUTH2_CLIENT_USER_AUTHORIZATION_URI=${KEYCLOAK_URL:-http://keycloak:9080}/auth/realms/igia/protocol/openid-connect/auth'
+            - 'SECURITY_OAUTH2_RESOURCE_USER_INFO_URI=${KEYCLOAK_URL:-http://keycloak:9080}/auth/realms/igia/protocol/openid-connect/userinfo'
+            - SECURITY_OAUTH2_CLIENT_CLIENT_ID=${OAUTH2_CLIENT_ID_INTEGRATIONCONFIGURATION:-internal}
+            - SECURITY_OAUTH2_CLIENT_CLIENT_SECRET=${OAUTH2_CLIENT_SECRET_INTEGRATIONCONFIGURATION:-internal}
+            - SECURITY_OAUTH2_CLIENT_SCOPE=openid profile email
+            - JHIPSTER_SLEEP=60 # gives time for the JHipster Registry to boot before the application
+            - JHIPSTER_REGISTRY_PASSWORD=${JHIPSTER_REGISTRY_PASSWORD:-admin}
+            - APPLICATION_SECRET_KEY=this_is_encrypt_key
+            - APPLICATION_WORKER_SERVICE_NAME_PREFIX=INTEGRATIONWORKER
+            - APPLICATION_MESSAGE_BROKER_PREFIX=INTEGRATION
+            - APPLICATION_MESSAGE_IN_QUEUE=$${APPLICATION_MESSAGE_BROKER_PREFIX}.CONFIGURATION
+            - JMS_COMPONENT_BROKER_URL=ssl://activemq:61617
+            - JMS_COMPONENT_USER=integration
+            - JMS_COMPONENT_PASSWORD=integration
+            - JMS_COMPONENT_POOL_MAX_CONNECTIONS=5
+            - JMS_COMPONENT_SSL_TRUST_STORE=/app/resources/jms/activemq/client.ts
+            - JMS_COMPONENT_SSL_TRUST_STORE_PASSWORD=${ACTIVEMQ_CLIENT_TRUSTSTORE_PASSWORD:-igia-client}
+            - JMS_COMPONENT_SSL_KEY_STORE=/app/resources/jms/activemq/client.ks
+            - JMS_COMPONENT_SSL_KEY_STORE_PASSWORD=${ACTIVEMQ_CLIENT_KEYSTORE_PASSWORD:-igia-client}
+            - JHIPSTER_LOGGING_LOGSTASH_ENABLED=${LOGGING_LOGSTASH_ENABLED:-false}
+            - SPRING_ZIPKIN_ENABLED=${TRACING_ZIPKIN_ENABLED:-false}
+            - '_JAVA_OPTIONS=-Xmx400m'
+        #ports:
+        #    - '8050:8050'
+        depends_on:
+            - jhipster-registry
+            - activemq
+            - integrationconfiguration-postgresql
+            

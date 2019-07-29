@@ -1,0 +1,189 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+# Variables for igia-deployer role
+# These variables aren't expected to change across different deployment scenarios.
+
+## Minimum version for pre-requisites
+docker_version_min: '18.0'
+docker_compose_version_min: '1.22'
+jdk_version_min: '1.8.0'
+git_version_min: '1.7.1'
+
+## Components which need to be built before deploying
+apps:
+  - repo_url: "{{ platform_url }}{{ platform_group }}/igia-keycloak.git"  # SCM Url
+    repo_ref: "{{ platform_version }}"                               # Unless there is any good reason, always use "{{ platform_version }}"
+    app_name: igia-keycloak                                               # this name must match the suffix used in docker-compose file. See #1 above.
+    build_command: ./mvnw package -Pprod -DskipTests=true dockerfile:build  # Command which builds Docker image from this project.
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/igia-apigateway.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: igia-apigateway
+    build_command: ./mvnw package -Pprod,zipkin -DskipTests=true jib:dockerBuild
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/igia-fhir-api-example.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: igia-fhir-api-example
+    build_command: ./mvnw package -Pprod,zipkin -DskipTests=true jib:dockerBuild
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/igia-fhir-api-example.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: igia-fhir-api-example-wiremock
+    build_command: docker build -f ./src/main/docker/Dockerfile-wiremock -t igia/igia-fhir-api-example-wiremock ./src
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/igia-smart-launch-app.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: igia-smart-launch-app
+    build_command: ./mvnw package -Pprod,zipkin -DskipTests=true verify jib:dockerBuild
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/integration-configuration.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: integration-configuration
+    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/integration-worker.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: integration-worker
+    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/integration-app.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: integration-app
+    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/cha2ds2-vasc-api.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: cha2ds2-vasc-api
+    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/cha2ds2-vasc-application.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: cha2ds2-vasc-application
+    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/igia-camunda.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: igia-camunda
+    build_command: ./mvnw package -DskipTests=true dockerfile:build
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/caremanagement.git"
+    repo_ref: "{{ platform_version }}"
+    app_name: caremanagement
+    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+
+mandatory_components:
+  - jhipster-registry
+  - nginx
+#  - portainer
+
+## These are used by Nginx proxy
+igia_component_groups:
+  - name: igia-apps
+    label: igia Apps & Services
+
+  - name: igia-microservice-infra
+    label: igia Microservice infrastructure
+
+  - name: tools
+    label: Tools
+
+igia_components:
+  - name: jhipster-registry
+    label: Service Registry
+    description: >
+      igia uses <a href="https://github.com/jhipster/jhipster-registry">JHipster Registry</a> as
+       the microservice registry and configuration server for the igia platform.
+    igia_component_group: igia-microservice-infra
+    launch_url: "http://localhost:{{ lookup('env','JHIPSTER_REGISTRY_PORT')|default('8761', true) }}"
+    enabled: "true"
+
+  - name: keycloak
+    label: Redhat KeyCloak
+    description: >
+      <a href="https://www.keycloak.org/">RedHat KeyCloak</a> is a OAuth2 and OpenID Connect server that
+       serves as the Identity and Access Management server for the igia platform.
+    igia_component_group: igia-microservice-infra
+    launch_url: "http://localhost:{{ lookup('env','KEYCLOAK_PORT')|default('9080', true) }}"
+    enabled: "{{ 'igia-keycloak' in selected_optional_components }}"
+
+  - name: jhipster-console
+    label: Logging
+    description: >
+      igia uses <a href="https://www.elastic.co/products">ELK stack</a> for logging, and
+       <a href="https://github.com/jhipster/jhipster-console">JHipster Console</a>  for logs monitoring.
+    igia_component_group: igia-microservice-infra
+    launch_url: "http://localhost:{{ lookup('env','JHIPSTER_CONSOLE_PORT')|default('5601', true) }}"
+    enabled: "{{ logging_logstash_enabled|bool }}"
+
+  - name: zipkin
+    label: Tracing
+    description: >
+      igia uses <a href="https://www.elastic.co/products">ELK stack</a> and <a href="https://zipkin.io/">Zipkin</a>
+       for tracing, and <a href="https://github.com/jhipster/jhipster-console">JHipster Console</a> for traces monitoring.
+    igia_component_group: igia-microservice-infra
+    launch_url: "http://localhost:{{ lookup('env','ZIPKIN_PORT')|default('9411', true) }}"
+    enabled: "{{ tracing_zipkin_enabled|bool }}"
+
+  - name: portainer
+    label: Portainer
+    description: >
+      <a href="https://www.portainer.io/">Portainer</a>  provides admin UI to manage and maintain the
+       Docker environment.
+    igia_component_group: tools
+    launch_url: "http://localhost:{{ lookup('env','PORTAINER_PORT')|default('7000', true) }}"
+    enabled: "{{ 'portainer' in selected_optional_components }}"
+
+  - name: igia-apigateway
+    label: API Microgateway
+    description: >
+      API microgateway for igia apps and services.
+    igia_component_group: igia-apps
+    launch_url: "http://localhost:{{ lookup('env','APIGTW_PORT')|default('8088', true) }}"
+    enabled: "{{ 'igia-apigateway' in selected_optional_components }}"
+
+  - name: sample-app
+    label: Demo Application
+    description: >
+      Demo Application showcases how to create a clinical application using different igia components.
+    igia_component_group: igia-apps
+    launch_url: "http://localhost:{{ lookup('env','SAMPLE_APP_PORT')|default('8055', true) }}"
+    enabled: "{{ 'cha2ds2-vasc-application' in selected_optional_components }}"
+
+  - name: hspc-patient-data-manager
+    label: HSPC Patient Management SMART App
+    description: >
+      SMART on FHIR app against igia FHIR demo server.
+    igia_component_group: igia-apps
+    launch_url: "http://localhost:{{ lookup('env','PATENT_DATA_MANAGER_PORT')|default('8096', true) }}/launch.html?iss=http://apigtw-app:{{ lookup('env','APIGTW_PORT')|default('8088', true) }}/igiafhirapiexample/api"
+    enabled: "{{ 'hspc-patient-data-manager' in selected_optional_components }}"
+
+  - name: integration-app
+    label: igia Integration Application
+    description: >
+      Integration Application allows System Administrators to configure data integration pipelines
+       for healthcare data via a user interface.
+    igia_component_group: igia-apps
+    launch_url: "http://localhost:{{ lookup('env','INTEGRATION_APP_PORT')|default('8052', true) }}"
+    enabled: "{{ 'integration-app' in selected_optional_components }}"
+
+  - name: caremanagement-app
+    label: Care Management
+    description: >
+      Care management component is a set of APIs which allows program manager to configure care plans.
+       Care plans consists of goals and tasks to achieve the goals.
+       Care plan can be configured in a simple excel and imported.
+    igia_component_group: igia-apps
+    launch_url: "http://localhost:{{ lookup('env','CAREMEMANAGEMENT_PORT')|default('8091', true) }}"
+    enabled: "{{ 'caremanagement' in selected_optional_components }}"

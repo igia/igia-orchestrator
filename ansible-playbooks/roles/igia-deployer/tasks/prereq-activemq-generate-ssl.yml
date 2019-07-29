@@ -1,0 +1,95 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+
+- name: generate activemq ssl passwords
+  set_fact:
+    activemq_broker_keystore_password: "{{ lookup('env','ACTIVEMQ_BROKER_KEYSTORE_PASSWORD') if lookup('env','ACTIVEMQ_BROKER_KEYSTORE_PASSWORD')|length > 0 else  lookup('password', '/dev/null length=15 chars=ascii_letters,digits,hexdigits') }}"  # noqa 204
+    activemq_client_keystore_password: "{{ lookup('env','ACTIVEMQ_CLIENT_KEYSTORE_PASSWORD') if lookup('env','ACTIVEMQ_CLIENT_KEYSTORE_PASSWORD')|length > 0 else  lookup('password', '/dev/null length=15 chars=ascii_letters,digits,hexdigits') }}"  # noqa 204
+  when: not activemq_keystore_set_default_passwd
+  tags: prereq
+
+- name: Set Keystore default password
+  set_fact:
+    activemq_broker_keystore_password: "igia-broker"
+    activemq_client_keystore_password: "igia-client"
+  when: activemq_keystore_set_default_passwd
+  no_log: true
+  tags: prereq
+
+- name: assert keystore-password hash is generated for activemq
+  assert:
+    that:
+      - "activemq_broker_keystore_password | length > 0"
+      - "activemq_client_keystore_password | length > 0"
+    fail_msg: "'activemq_broker_keystore_password and/or activemq_client_keystore_password' not generated"
+  tags: prereq
+
+- name: Remove existing activemq ssl files
+  file: path={{ item }} state=absent
+  with_fileglob:
+    - "{{ activemq_config_dir }}/client*"
+    - "{{ activemq_config_dir }}/broker*"
+  no_log: true
+  tags: prereq
+
+- name: Generate key, keystore and truststore for client and broker
+  command: "{{ item }}"   # noqa 301
+  args:
+    chdir: "{{ activemq_config_dir }}"
+  with_items:
+    - "keytool -genkey -alias broker -keyalg RSA -keysize {{ activemq_cert_keysize }} -validity {{ activemq_cert_validity }} -keystore broker.ks -storetype pkcs12 -dname \"{{ activemq_broker_dname }}\" -storepass {{ activemq_broker_keystore_password }}"  # noqa 204
+    - "keytool -export -alias broker -keystore broker.ks -storetype pkcs12 -file broker_cert -storepass {{ activemq_broker_keystore_password }}"  # noqa 204
+    - "keytool -genkey -alias client -keyalg RSA -keysize {{ activemq_cert_keysize }} -validity {{ activemq_cert_validity }} -keystore client.ks -storetype pkcs12 -dname \"{{ activemq_client_dname }}\" -storepass {{ activemq_client_keystore_password }}"  # noqa 204
+    - "keytool -import -alias broker -keystore client.ts -storetype pkcs12 -file broker_cert -storepass {{ activemq_client_keystore_password }} -noprompt"  # noqa 204
+    - "keytool -export -alias client -keystore client.ks -storetype pkcs12 -file client_cert -storepass {{ activemq_client_keystore_password }}"  # noqa 204
+    - "keytool -import -alias client -keystore broker.ts -storetype pkcs12 -file client_cert -storepass {{ activemq_broker_keystore_password }} -noprompt"  # noqa 204
+  no_log: true
+  tags: prereq
+
+- name: Add ssl keystore config in activemq.xml
+  replace:
+    regexp: 'keyStore\=\"conf\/broker\.ks\" keyStorePassword\=\"(.+)\"'
+    replace: 'keyStore="conf/broker.ks" keyStorePassword="{{ activemq_broker_keystore_password }}"'
+    path: "{{ activemq_config_dir }}/activemq.xml"
+    force: true
+  no_log: true
+  tags: prereq
+
+- name: Add ssl truststore config in activemq.xml
+  replace:
+    regexp: 'trustStore\=\"conf\/broker\.ts\" trustStorePassword\=\"(.+)\"'
+    replace: 'trustStore="conf/broker.ts" trustStorePassword="{{ activemq_broker_keystore_password }}"'
+    path: "{{ activemq_config_dir }}/activemq.xml"
+    force: true
+  no_log: true
+  tags: prereq
+
+- name: Add ssl keystore config in jetty.xml
+  replace:
+    after: '\<property name\=\"keyStorePath\" value=\"conf\/broker\.ks\" \/\>'
+    regexp: '\<property name\=\"keyStorePassword\" value\=\"(.+)\" \/\>'
+    replace: '<property name="keyStorePassword" value="{{ activemq_broker_keystore_password }}" />'
+    path: "{{ activemq_config_dir }}/jetty.xml"
+    force: true
+  no_log: true
+  tags: prereq
+
+- name: Remove intermediate files
+  file: path={{ item }} state=absent
+  with_fileglob:
+    - "{{ activemq_config_dir }}/client_cert"
+    - "{{ activemq_config_dir }}/broker_cert"
+  no_log: true
+  tags: prereq

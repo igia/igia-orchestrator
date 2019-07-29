@@ -1,0 +1,33 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+version: '3.2'
+services:
+  jhipster-console:
+    container_name: jhipster-console
+    image: jhipster/jhipster-console
+    environment:
+      - ELASTICSEARCH_URL=http://jhipster-elasticsearch:9200
+      - 'NODE_OPTIONS=--max_old_space_size=256'
+    ports:
+      - "${JHIPSTER_CONSOLE_PORT:-5601}:5601"
+    depends_on:
+      - jhipster-elasticsearch
+
+  jhipster-import-dashboards:
+      container_name: jhipster-import-dashboards
+      image: jhipster/jhipster-import-dashboards
+      environment:
+          - ELASTICSEARCH_URL=http://jhipster-elasticsearch:9200
+      depends_on:
+          - jhipster-elasticsearch

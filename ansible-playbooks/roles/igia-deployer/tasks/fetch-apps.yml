@@ -1,0 +1,27 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+# pull code from Git
+- name: create working directory
+  file: path={{ deploy_dir }} state=directory mode=0755
+  tags:
+    - fetch
+
+- name: git pull apps
+  git: repo={{ project.repo_url }} dest={{ deploy_dir }}/{{ project.app_name }} version={{ project.repo_ref }} force=yes accept_hostkey=yes
+  loop: "{{ projects }}"
+  loop_control:
+    loop_var: "project"
+  tags:
+    - fetch

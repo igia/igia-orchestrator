@@ -1,0 +1,28 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+version: '3.2'
+services:
+    jhipster-zipkin:
+        container_name: jhipster-zipkin
+        image: jhipster/jhipster-zipkin
+        environment:
+            - ES_HOSTS=http://jhipster-elasticsearch:9200
+            - ES_INDEX=traces
+            - ZIPKIN_UI_LOGS_URL="http://localhost:5601/app/kibana#/discover/d0682f20-e0e9-11e7-9c68-0b9a0f0c183c?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-30d,mode:quick,to:now))&_a=(columns:!(X-B3-TraceId,app_name,level,message),filters:!(('$$state':(store:appState),meta:(alias:!n,disabled:!f,index:'logs-*',key:X-B3-TraceId,negate:!f,params:(query:'trace',type:phrase),type:phrase,value:'trace'),query:(match:(X-B3-TraceId:(query:'{traceId}',type:phrase))))),index:'logs-*',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))"
+            - '_JAVA_OPTIONS=-Xmx400m'
+        ports:
+            - "${ZIPKIN_PORT:-9411}:9411"
+        depends_on:
+            - jhipster-elasticsearch
+            - jhipster-console

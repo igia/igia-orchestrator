@@ -1,0 +1,24 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+# Check if correct version of docker-compose is installed
+- name: detect docker-compose version
+  command: docker-compose version --short
+  register: docker_compose_version
+  ignore_errors: True
+  changed_when: False
+
+- name: warn if docker-compose pre-req fails
+  fail: msg="Please make sure docker-compose v{{ docker_compose_version_min }} or higher is installed"
+  when: docker_compose_version.stdout is not defined or docker_compose_version.stdout is not version(docker_compose_version_min, '>=')

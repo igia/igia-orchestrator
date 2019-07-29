@@ -1,0 +1,91 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+#common configuration shared between all applications
+configserver:
+    name: Docker JHipster Registry
+    status: Connected to the JHipster Registry running in Docker
+
+jhipster:
+    security:
+        authentication:
+            jwt:
+                base64-secret: ODExMzQ2ZTQ5ZjhmNDI1Nzg1N2RjN2Q3YmIzMjJlODc3NmY5N2U5ODNjNmMxNWE0YzRkZjE1MWU3M2NkYzFjYjQ5Y2I1NmYzMWIzZmMwZjAwNzM4ZTViNTdkNTc5MzNmODNhNA==
+
+    # This won't have any impact until jhipster.logging.logstash.enabled property is set to true
+    logging:
+        logstash: # Forward logs to logstash over a socket, used by LoggingConfiguration
+            host: jhipster-logstash  # Only docker conatiners in same network can send logs
+            port: 5000
+            queueSize: 512
+eureka:
+    client:
+        service-url:
+            defaultZone: http://admin:${jhipster.registry.password}@jhipster-registry:8761/eureka/
+
+spring:
+    # This won't have any impact until spring.zipkin.enabled property is set to true
+    zipkin: # Use the "zipkin" Maven profile to have the Spring Cloud Zipkin dependencies
+        base-url: http://jhipster-zipkin:9411
+
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 40000
+
+ribbon:
+  ConnectTimeout:  10000
+  ReadTimeout:  10000
+
+# This is necessary for OPTIONS to work
+# Each gateway should use jhipster.cors to enable CORS if necessary (disabled by default)
+zuul:
+  ignored-headers: Access-Control-Allow-Credentials, Access-Control-Allow-Origin
+  # by default, disable zuul proxy forwarding in all gateways.
+  ignored-services: '*'
+
+## Info endpoint
+info:
+    deploy-mode:
+        name: local ## local, dev, qa, stage, prod
+        description: This instance is deployed on local machine for development
+
+## igia platform properties
+igia:
+  hipaa:
+    audit:
+      # Blacklist java regex URI patterns that are not to be audited
+      hipaa-blacklist-uri-patterns:
+        - .*/gateway/.*
+        - .*/api/healthcheck/alive\.json$
+        - .*/api/profile-info$
+        - .*/igiafhirapiexample/api/metadata.*
+      # Whitelist java regex URI patterns that are to be audited
+      hipaa-whitelist-uri-patterns:
+        - .*/api/.*
+      # Whitelist java regex URI patterns for responses that are to be audited
+      hipaa-response-whitelist-uri-patterns:
+        - .*\/igiafhirapiexample\/api\/Patient\?.*
+  smart-launch:
+    secret-key: aSqzP4reFgWR4j94BDT1r+81QYp/NYbY9SBwXtqV1ko=
+    alg: HS256
+    trusted-redirects:
+      -
+        host: localhost
+        port: 9080
+      -
+        host: keycloak
+        port: 9080             

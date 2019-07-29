@@ -1,0 +1,130 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+  - debug:
+      msg: "{{ server_fqdn }}"
+
+  - name: Ensure python-pyOpenSSL package is installed
+    pip:
+      name: pyOpenSSL>=0.15
+      extra_args: --user
+    delegate_to: 127.0.0.1
+  
+  - name: "Ensure {{ work_dir }} is present"
+    file:
+      path: "{{ work_dir }}/{{ server_fqdn }}"
+      state: directory
+    delegate_to: 127.0.0.1
+
+  ## CA 
+  - name: Generate the private key for CA
+    openssl_privatekey:
+      path: "{{ work_dir }}/{{ server_fqdn }}/ca-key.pem"
+      size: 4096
+      type: RSA
+      cipher: aes256
+      passphrase: "{{ ca_key_passphrase }}"
+    delegate_to: 127.0.0.1
+  
+  - name: Generate CSR for CA
+    openssl_csr:
+      path: "{{ work_dir }}/{{ server_fqdn }}//ca.csr"
+      privatekey_path: "{{ work_dir }}/{{ server_fqdn }}/ca-key.pem"
+      privatekey_passphrase: "{{ ca_key_passphrase }}"
+      country_name: "{{ tls_country }}"
+      state_or_province_name: "{{ tls_state}} "
+      locality_name: "{{ tls_locality }}"
+      organization_name: "{{ tls_org }}"
+      organizational_unit_name: "{{ tls_unit }}"
+      email_address: "{{ tls_email }}"
+      common_name: "{{ server_fqdn }}"
+      basic_constraints: "CA:true"
+      key_usage:
+        - keyCertSign
+        - cRLSign
+        - digitalSignature
+    delegate_to: 127.0.0.1
+ 
+  - name: Generate self-signed cert for CA
+    openssl_certificate:
+      path: "{{ work_dir }}/{{ server_fqdn }}/ca.pem"
+      privatekey_path: "{{ work_dir }}/{{ server_fqdn }}/ca-key.pem"
+      privatekey_passphrase: "{{ ca_key_passphrase }}"
+      csr_path: "{{ work_dir }}/{{ server_fqdn }}/ca.csr"
+      provider: selfsigned
+#      selfsigned_notAfter:  "{{ (( ansible_date_time.year | int ) + 10 ) ~ '0101000000Z' }}"
+    delegate_to: 127.0.0.1
+
+  ### Docker server
+  - name: Generate the private key for Docker server
+    openssl_privatekey:
+      path: "{{ work_dir }}/{{ server_fqdn }}/server-key.pem"
+      size: 4096
+      type: RSA
+    delegate_to: 127.0.0.1
+
+  - name: Generate CSR for Docker server
+    openssl_csr:
+      path: "{{ work_dir }}/{{ server_fqdn }}/server.csr"
+      privatekey_path: "{{ work_dir }}/{{ server_fqdn }}/server-key.pem"
+      country_name: "{{ tls_country }}"
+      state_or_province_name: "{{ tls_state}} "
+      locality_name: "{{ tls_locality }}"
+      organization_name: "{{ tls_org }}"
+      organizational_unit_name: "{{ tls_unit }}"
+      email_address: "{{ tls_email }}"
+      common_name: "{{ server_fqdn }}"
+    delegate_to: 127.0.0.1
+
+  - name: Generate certificate for Docker server
+    openssl_certificate:
+      path: "{{ work_dir }}/{{ server_fqdn }}/server-cert.pem"
+      privatekey_path: "{{ work_dir }}/{{ server_fqdn }}/server-key.pem"
+      csr_path: "{{ work_dir }}/{{ server_fqdn }}/server.csr"
+      ownca_path: "{{ work_dir }}/{{ server_fqdn }}/ca.pem"
+      ownca_privatekey_path: "{{ work_dir }}/{{ server_fqdn }}/ca-key.pem"
+      ownca_privatekey_passphrase:  "{{ ca_key_passphrase }}"
+      extended_key_usage:
+        - serverAuth
+      provider: ownca
+    delegate_to: 127.0.0.1
+
+  ### Docker client
+  - name: Generate the private key for Docker client
+    openssl_privatekey:
+      path: "{{ work_dir }}/{{ server_fqdn }}/key.pem"
+      size: 4096
+      type: RSA
+    delegate_to: 127.0.0.1
+
+  - name: Generate CSR for Docker client
+    openssl_csr:
+      path: "{{ work_dir }}/{{ server_fqdn }}/client.csr"
+      privatekey_path: "{{ work_dir }}/{{ server_fqdn }}/key.pem"
+      common_name: "client-{{ server_fqdn }}"
+      subject_alt_name: "DNS:{{ server_fqdn }},IP:{{ server_ip }},IP:127.0.0.1"
+    delegate_to: 127.0.0.1
+
+  - name: Generate certificate for Docker client
+    openssl_certificate:
+      path: "{{ work_dir }}/{{ server_fqdn }}/cert.pem"
+      privatekey_path: "{{ work_dir }}/{{ server_fqdn }}/key.pem"
+      csr_path: "{{ work_dir }}/{{ server_fqdn }}/client.csr"
+      ownca_path: "{{ work_dir }}/{{ server_fqdn }}/ca.pem"
+      ownca_privatekey_path: "{{ work_dir }}/{{ server_fqdn }}/ca-key.pem"
+      ownca_privatekey_passphrase:  "{{ ca_key_passphrase }}"
+      extended_key_usage:
+        - clientAuth
+      provider: ownca
+    delegate_to: 127.0.0.1

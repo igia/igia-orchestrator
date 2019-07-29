@@ -1,0 +1,27 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+## Optional components which are selected for smart-on-fhir stack deployment
+selected_optional_components:
+  - igia-keycloak
+  - igia-apigateway
+  - igia-apigateway-postgresql
+  - igia-fhir-api-example-wiremock
+  - igia-fhir-api-example-postgresql
+  - igia-fhir-api-example
+  - igia-smart-launch-app-postgresql
+  - igia-smart-launch-app
+  - hspc-patient-data-manager
+  - portainer
+

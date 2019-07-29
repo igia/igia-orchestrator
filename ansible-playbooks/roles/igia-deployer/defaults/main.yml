@@ -1,0 +1,83 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+# defaults for igia-deployer.
+## Base URL of the Platform repository. Git over SSH preferred
+# Git over HTTPS separator: '/'. Git over SSH separator: ':'
+platform_url: "https://github.com/"
+
+## Group name of the Platfrom Git repository
+platform_group: igia
+
+## Version of the Platform to deploy
+platform_version: master
+
+## Optional components which are selected for deployment
+selected_optional_components:
+  - igia-keycloak
+  - igia-apigateway
+  - igia-apigateway-postgresql
+  - igia-fhir-api-example-wiremock
+  - igia-fhir-api-example-postgresql
+  - igia-fhir-api-example
+  - igia-smart-launch-app-postgresql
+  - igia-smart-launch-app
+  - hspc-patient-data-manager
+  - activemq
+  - integration-worker
+  - integration-configuration
+  - integration-configuration-postgresql
+  - integration-app
+  - integration-app-postgresql
+  - cha2ds2-vasc-api
+  - cha2ds2-vasc-api-postgresql
+  - cha2ds2-vasc-application
+  - cha2ds2-vasc-application-postgresql
+  - igia-camunda
+  - igia-camunda-postgresql
+  - caremanagement
+  - caremanagement-postgresql
+  - portainer
+
+## Add-ons
+logging_logstash_enabled: false
+tracing_zipkin_enabled: false
+
+## Deployment environment (currently only docker is supported )
+deploy_env: docker
+
+## Docker compose fies location (when docker deployment is chosen)
+docker_compose_files_path: "{{ playbook_dir }}/../docker-compose/local-dev"
+## Local directory to pull source codes for build
+deploy_dir: ~/igia-apps/
+
+## ActiveMQ SSL configuration - Integration applications stack
+# The preconfigured SSLs can be used by default. If this option is not set, the existing certs will be used and below options will be ignored.
+# If activemq_generate_new_ssl is set, it will generate and configure new SSL certs for activemq.
+activemq_generate_new_ssl: false
+activemq_broker_dname: "CN=activemq, OU=igia, O=Persistent Systems Ltd, L=PUNE, ST=MH, C=IN"
+activemq_client_dname: "CN=localhost, OU=igia, O=Persistent Systems Ltd, L=PUNE, ST=MH, C=IN"
+activemq_cert_keysize: 2048
+activemq_cert_validity: 3650
+activemq_keystore_set_default_passwd: false
+activemq_client_keystore_password: igia-client
+
+## Component specific configuration
+# configuration:
+#    keycloak:
+#        keycloak-url: https://<ext_keycloak>
+#    apigtw:
+#        database-url: jdbc:postgres//<ext_db_host>:5432/apigtw
+#        database-username: <db_user>
+#        database-password: <db_pass>

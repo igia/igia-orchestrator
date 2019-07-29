@@ -1,0 +1,65 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+- debug:
+    msg: "{{ server_fqdn }}"
+
+## Copy CA cert 
+- name: Copy CA cert
+  copy:
+    src: "{{ work_dir }}/{{ server_fqdn }}/ca.pem"
+    dest: /etc/pki/tls/certs/ca.pem
+    owner: root
+    group: root
+    mode: 0400
+  become: yes
+  notify:
+    - restart docker
+
+- name: Copy Server cert
+  copy:
+    src: "{{ work_dir }}/{{ server_fqdn }}/server-cert.pem"
+    dest: /etc/pki/tls/certs/server-cert.pem
+    owner: root
+    group: root
+    mode: 0400
+  become: yes
+  notify:
+    - restart docker
+
+- name: Copy Server private key
+  copy:
+    src: "{{ work_dir }}/{{ server_fqdn }}/server-key.pem"
+    dest: /etc/pki/tls/private/server-key.pem
+    owner: root
+    group: root
+    mode: 0400
+  become: yes
+  notify:
+    - restart docker
+
+### Make sure docker daemon is configured for TLS
+- name: Docker daemon configuration file 
+  lineinfile:
+    path: "{{ docker_config_file }}"
+    line: "{{ item }}"
+    backup: yes
+  become: yes
+  loop:
+    - '  "tlsverify": true,'
+    - '  "tlscacert": "/etc/pki/tls/certs/ca.pem",'
+    - '  "tlscert": "/etc/pki/tls/certs/server-cert.pem",'
+    - '  "tlskey": "/etc/pki/tls/private/server-key.pem",'
+  notify:
+    - restart docker

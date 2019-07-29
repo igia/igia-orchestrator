@@ -1,0 +1,26 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+extends: default
+
+rules:
+  braces:
+    max-spaces-inside: 1
+    level: error
+  brackets:
+    max-spaces-inside: 1
+    level: error
+  line-length: disable
+  # NOTE(retr0h): Templates no longer fail this lint rule.
+  #               Uncomment if running old Molecule templates.
+  truthy: disable

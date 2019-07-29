@@ -1,0 +1,39 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+version: '3.2'
+services:
+    jhipster-logstash:
+        container_name: jhipster-logstash
+        image: jhipster/jhipster-logstash
+        environment:
+            - INPUT_TCP_PORT=5000
+            - INPUT_UDP_PORT=5000
+            - INPUT_HTTP_PORT=5001
+            - ELASTICSEARCH_HOST=jhipster-elasticsearch
+            - ELASTICSEARCH_PORT=9200
+            - LOGSTASH_DEBUG=false
+            - 'LS_JAVA_OPTS=-Xms128m -Xmx256m'
+#        ports:
+#            - "5000:5000"
+#            - "5001:5001"
+#            - "9600:9600"
+        volumes:
+            - ./jhipster-logstash-config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+        healthcheck:
+            test: bin/logstash -t
+            interval: 60s
+            timeout: 50s
+            retries: 5
+        depends_on:
+            - jhipster-elasticsearch 

@@ -1,0 +1,8 @@
+{
+  "realm": "igia",
+  "auth-server-url": "http://keycloak:9080/auth",
+  "ssl-required": "external",
+  "resource": "internal",
+  "public-client": true,
+  "confidential-port": 0
+}
