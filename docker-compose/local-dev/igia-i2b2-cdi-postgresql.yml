@@ -11,15 +11,20 @@
 # Copyright (C) 2018-2019 Persistent Systems, Inc.
 #
 
----
-## Optional components which are selected for sample-app stack deployment
-selected_optional_components:
-  - igia-keycloak
-  - cha2ds2-vasc-api
-  - cha2ds2-vasc-api-postgresql
-  - cha2ds2-vasc-application
-  - cha2ds2-vasc-application-postgresql
-  - portainer
+version: '3.2'
 
-selected_components_skip_qa:
-  - igia-keycloak
+services:
+  i2b2-cdi-postgresql:
+    image: postgres:10.4
+    #volumes:
+    #  - ~/volumes/postgresql/:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=${I2B2_CDI_APP_POSTGRESQL_USERNAME:-igia}
+      - POSTGRES_PASSWORD=${I2B2_CDI_APP_POSTGRESQL_PASSWORD:-igiaPwd}
+      - POSTGRES_DB=clinical_data_infrastructure
+    networks:
+      - i2b2net
+
+networks: 
+    i2b2net:
+       driver: bridge

@@ -26,62 +26,93 @@ apps:
   - repo_url: "{{ platform_url }}{{ platform_group }}/igia-keycloak.git"  # SCM Url
     repo_ref: "{{ platform_version }}"                               # Unless there is any good reason, always use "{{ platform_version }}"
     app_name: igia-keycloak                                               # this name must match the suffix used in docker-compose file. See #1 above.
-    build_command: ./mvnw package -Pprod -DskipTests=true dockerfile:build  # Command which builds Docker image from this project.
+    build_command: ./mvnw clean package -Pprod -DskipTests=true dockerfile:build  # Command which builds Docker image from this project.
+    qa_suite: "protractor"                                                  # Respective QA suite to verify
+    verify_command: yarn e2e                                                # Command which invokes component's QA suite execution
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/igia-apigateway.git"
     repo_ref: "{{ platform_version }}"
     app_name: igia-apigateway
-    build_command: ./mvnw package -Pprod,zipkin -DskipTests=true jib:dockerBuild
+    build_command: ./mvnw clean package -Pprod,zipkin -DskipTests=true jib:dockerBuild
+    qa_suite: "protractor"
+    verify_command: yarn e2e
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/igia-fhir-api-example.git"
     repo_ref: "{{ platform_version }}"
     app_name: igia-fhir-api-example
-    build_command: ./mvnw package -Pprod,zipkin -DskipTests=true jib:dockerBuild
+    build_command: ./mvnw clean package -Pprod,zipkin -DskipTests=true jib:dockerBuild
+    qa_suite: "service"
+    verify_command: docker run --network local-dev_default --rm appropriate/curl -fsSL -s -o /dev/null -I -w "%{http_code}" http://igiafhirapiexample-app:8081
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/igia-fhir-api-example.git"
     repo_ref: "{{ platform_version }}"
     app_name: igia-fhir-api-example-wiremock
     build_command: docker build -f ./src/main/docker/Dockerfile-wiremock -t igia/igia-fhir-api-example-wiremock ./src
+    qa_suite: "service"
+    verify_command: docker run --network local-dev_default --rm appropriate/curl -fsSL -s -o /dev/null -I -w "%{http_code}" http://igiafhirapiexample-wiremock:8080
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/igia-smart-launch-app.git"
     repo_ref: "{{ platform_version }}"
     app_name: igia-smart-launch-app
-    build_command: ./mvnw package -Pprod,zipkin -DskipTests=true verify jib:dockerBuild
+    build_command: ./mvnw clean package -Pprod,zipkin -DskipTests=true verify jib:dockerBuild
+    qa_suite: "protractor"
+    verify_command: yarn e2e
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/integration-configuration.git"
     repo_ref: "{{ platform_version }}"
     app_name: integration-configuration
-    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    build_command: ./mvnw clean package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    qa_suite: "karate"
+    verify_command: ./mvnw test -DTest=KarateTestRunner
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/integration-worker.git"
     repo_ref: "{{ platform_version }}"
     app_name: integration-worker
-    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    build_command: ./mvnw clean package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    qa_suite: "service"
+    verify_command: docker run --network local-dev_default --rm appropriate/curl -fsSL -s -o /dev/null -I -w "%{http_code}" http://integrationworker-app:8051
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/integration-app.git"
     repo_ref: "{{ platform_version }}"
     app_name: integration-app
-    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    build_command: ./mvnw clean package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    qa_suite: "protractor"
+    verify_command: yarn e2e
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/cha2ds2-vasc-api.git"
     repo_ref: "{{ platform_version }}"
     app_name: cha2ds2-vasc-api
-    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    build_command: ./mvnw clean package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    qa_suite: "karate"
+    verify_command: ./mvnw test -DTest=KarateTestRunner
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/cha2ds2-vasc-application.git"
     repo_ref: "{{ platform_version }}"
     app_name: cha2ds2-vasc-application
-    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    build_command: ./mvnw clean package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    qa_suite: "protractor"
+    verify_command: yarn e2e
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/igia-camunda.git"
     repo_ref: "{{ platform_version }}"
     app_name: igia-camunda
-    build_command: ./mvnw package -DskipTests=true dockerfile:build
+    build_command: ./mvnw clean package -DskipTests=true dockerfile:build
+    qa_suite: "service"
+    verify_command: curl -s -o /dev/null -I -w "%{http_code}" http://localhost:9085
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/caremanagement.git"
     repo_ref: "{{ platform_version }}"
     app_name: caremanagement
-    build_command: ./mvnw package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    build_command: ./mvnw clean package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
+    qa_suite: "karate"
+    verify_command: ./mvnw test -DTest=KarateTestRunner
+
+  - repo_url: "{{ platform_url }}{{ platform_group }}/i2b2-cdi-ext.git"
+    repo_ref: "release_0.3.1RC2"
+    app_name: igia-i2b2-cdi-app
+    build_command: ./mvnw -Pprod package
+    qa_suite: "service"
+    verify_command: curl -s -o /dev/null -I -w "%{http_code}" "http://localhost:{{ lookup('env','I2B2_WEB_PORT')|default('8086', true) }}"
 
 mandatory_components:
   - jhipster-registry
@@ -187,3 +218,11 @@ igia_components:
     igia_component_group: igia-apps
     launch_url: "http://localhost:{{ lookup('env','CAREMEMANAGEMENT_PORT')|default('8091', true) }}"
     enabled: "{{ 'caremanagement' in selected_optional_components }}"
+
+  - name: igia-i2b2-cdi-app
+    label: i2b2 Clinical Data Infrastructure Extension Application
+    description: >
+      I2b2 framework provides data storage and querying the data with the help of clinical concepts (i.e. Ontology).
+    igia_component_group: igia-apps
+    launch_url: "http://localhost:{{ lookup('env','I2B2_WEB_PORT')|default('8086', true) }}"
+    enabled: "{{ 'igia-i2b2-web' in selected_optional_components }}"

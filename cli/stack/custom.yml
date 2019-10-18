@@ -37,5 +37,11 @@ selected_optional_components:
   - igia-camunda-postgresql
   - caremanagement
   - caremanagement-postgresql
+  - igia-i2b2-postgresql
+  - igia-i2b2-wildfly
+  - igia-i2b2-web
+  - igia-i2b2-cdi-postgresql
+  - igia-i2b2-python-delete-data
+  - igia-i2b2-cdi-sftp
+  - igia-i2b2-cdi-app
   - portainer
-

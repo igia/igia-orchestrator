@@ -12,14 +12,14 @@
 #
 
 ---
-## Optional components which are selected for sample-app stack deployment
-selected_optional_components:
-  - igia-keycloak
-  - cha2ds2-vasc-api
-  - cha2ds2-vasc-api-postgresql
-  - cha2ds2-vasc-application
-  - cha2ds2-vasc-application-postgresql
-  - portainer
-
-selected_components_skip_qa:
-  - igia-keycloak
+# verify apps with qa suite execution
+- name: verify apps
+  command: "{{ project.verify_command }}"
+  when: (qa_suite_type == "all") or (qa_suite_type == project.qa_suite)
+  args:
+    chdir: "{{ deploy_dir }}/{{ project.app_name }}"
+  loop: "{{ projects }}"
+  loop_control:
+    loop_var: "project"
+  ignore_errors: True
+  tags: verify

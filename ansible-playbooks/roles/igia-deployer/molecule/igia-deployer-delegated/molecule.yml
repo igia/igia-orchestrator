@@ -1,0 +1,55 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+dependency:
+  name: galaxy
+  options:
+    ignore-certs: True
+    role-file: ${MOLECULE_SCENARIO_DIRECTORY}/../common/requirements.yml
+lint:
+  name: yamllint
+driver:
+  name: delegated
+  options:
+    managed: False
+    ansible_connection_options:
+      ansible_connection: local
+platforms:
+  - name: localhost
+provisioner:
+  name: ansible
+  log: True
+  env:
+    MOLECULE_SSHKEY_PATH: ~/.ssh/id_rsa
+    MOLECULE_M2SETTING_PATH: ~/.m2/settings.xml
+  playbooks:
+    prepare: ./prepare.yml
+    converge: ./playbook.yml
+    cleanup: ./prepare.yml
+  lint:
+    name: ansible-lint
+scenario:
+  name: igia-deployer-delegated
+  test_sequence:
+    - lint
+    - dependency
+    - syntax
+    - prepare
+    - converge
+    # - verify  # included as part of orchestrator config
+verifier:
+  name: testinfra
+  directory: ../common/tests/${STACK_FILE}/
+  lint:
+    name: flake8

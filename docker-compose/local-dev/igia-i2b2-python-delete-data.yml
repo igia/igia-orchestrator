@@ -11,15 +11,21 @@
 # Copyright (C) 2018-2019 Persistent Systems, Inc.
 #
 
----
-## Optional components which are selected for sample-app stack deployment
-selected_optional_components:
-  - igia-keycloak
-  - cha2ds2-vasc-api
-  - cha2ds2-vasc-api-postgresql
-  - cha2ds2-vasc-application
-  - cha2ds2-vasc-application-postgresql
-  - portainer
+version: '3.2'
 
-selected_components_skip_qa:
-  - igia-keycloak
+services:
+  i2b2-python-delete-data:
+    image: i2b2/i2b2-python-delete-data:0.1
+    stdin_open: true
+    tty: true
+    command: "python delete_all_data.py"
+    environment:
+      - I2B2_DB_HOST=i2b2-pg 
+    networks:
+      - i2b2net
+    depends_on:
+      - i2b2-pg
+
+networks: 
+    i2b2net:
+       driver: bridge

@@ -80,10 +80,11 @@ while :; do
     echo
     echo "1. igia-Platform"
     echo "2. Integration Applications"
-    echo "3. Sample Applications"
-    echo "4. SMART-on-FHIR Applications"
-    echo "5. Workflow Applications"
-    echo "6. Stack with custom config file"
+    echo "3. i2b2-cdi-ext Applications"
+    echo "4. Sample Applications"
+    echo "5. SMART-on-FHIR Applications"
+    echo "6. Workflow Applications"
+    echo "7. Stack with custom config file"
     echo 
     read -p "Choose deployment stack option (Default: 1)? " SELECT
     
@@ -95,14 +96,15 @@ while :; do
     1)  break ;;
     2)  CUSTOM_VAR_FILE_PATH="${STACK_PATH}/data-integration.yml"
         break ;;
-    3)  CUSTOM_VAR_FILE_PATH="${STACK_PATH}/sample-app.yml"
+    3)  CUSTOM_VAR_FILE_PATH="${STACK_PATH}/i2b2-cdi-ext.yml"
         break ;;
-    4)  CUSTOM_VAR_FILE_PATH="${STACK_PATH}/smart-on-fhir.yml"
+    4)  CUSTOM_VAR_FILE_PATH="${STACK_PATH}/sample-app.yml"
         break ;;
-    5)  CUSTOM_VAR_FILE_PATH="${STACK_PATH}/workflow.yml"
+    5)  CUSTOM_VAR_FILE_PATH="${STACK_PATH}/smart-on-fhir.yml"
         break ;;
-        # Allow users to specify custom variable file if they need to override default values
-    6)  echo 
+    6)  CUSTOM_VAR_FILE_PATH="${STACK_PATH}/workflow.yml"
+        break ;;
+    7)  echo 
         read -p "Advaned setting: Any custom config file to override Ansible playbook defaults (Default: "$STACK_PATH/custom.yml")? " CUSTOM_VAR_FILE_PATH
 	    if [[ -z ${CUSTOM_VAR_FILE_PATH} ]];then
             CUSTOM_VAR_FILE_PATH="$STACK_PATH/custom.yml"
@@ -151,8 +153,53 @@ case $TRACING_OPT in
         ;;
 esac
 
+QA_SELECT=""
+QA_SUITE_PARAM=""
+QA_SUITE_TYPE_PARAM=""
+read -p "Do you want to enable tests execution to verify components against QA suite (N/y)? " QA_SUITE_OPT
+case $QA_SUITE_OPT in
+    y|Y|YES|yes|Yes)
+        QA_SUITE_PARAM="-e platform_components_qa_suite_execution=true"
+	# Allow users to specify specific QA suite type if they need to override default values
+	QA_SELECT=1
+	while :; do
+    	    echo
+	    echo "QA suite type"
+	    echo
+	    echo "1. All"
+	    echo "2. Karate"
+	    echo "3. Protractor"
+	    echo "4. Service"
+	    echo 
+	    read -p "Choose QA suite type option (Default: 1)? " QA_SELECT
+
+            if [[ -z ${QA_SELECT} ]]; then
+	        QA_SELECT=1
+	    fi
+
+	    case "$QA_SELECT" in
+	    1)  QA_SUITE_TYPE_PARAM="-e qa_suite_type=all" 
+		break ;;
+	    2)  QA_SUITE_TYPE_PARAM="-e qa_suite_type=karate"
+	        break ;;
+	    3)  QA_SUITE_TYPE_PARAM="-e qa_suite_type=protractor"
+	        break ;;
+	    4)  QA_SUITE_TYPE_PARAM="-e qa_suite_type=service"
+	        break ;;
+	    *)  echo
+        	echo "The entered QA suite type is not in the list."
+	        echo
+	        ;;
+	    esac
+	done
+   	;; 
+    *)
+	QA_SUITE_PARAM="-e platform_components_qa_suite_execution=false"
+        ;;
+esac
+
 echo
-echo "Running the command: ansible-playbook ${SCRIPT_PATH}/../ansible-playbooks/site.yml ${DEPLOY_DIR_PARAM} ${CUSTOM_VAR_FILE_PARAM} ${TRACING_PARAM} ${LOGGING_PARAM} ${SKIP_TAGS}"
+echo "Running the command: ansible-playbook ${SCRIPT_PATH}/../ansible-playbooks/site.yml ${DEPLOY_DIR_PARAM} ${CUSTOM_VAR_FILE_PARAM} ${TRACING_PARAM} ${LOGGING_PARAM} ${QA_SUITE_PARAM} ${QA_SUITE_TYPE_PARAM} ${SKIP_TAGS}"
 echo
 
-ansible-playbook ${SCRIPT_PATH}/../ansible-playbooks/site.yml ${DEPLOY_DIR_PARAM} ${CUSTOM_VAR_FILE_PARAM} ${TRACING_PARAM} ${LOGGING_PARAM} ${SKIP_TAGS}
+ansible-playbook ${SCRIPT_PATH}/../ansible-playbooks/site.yml ${DEPLOY_DIR_PARAM} ${CUSTOM_VAR_FILE_PARAM} ${TRACING_PARAM} ${LOGGING_PARAM} ${QA_SUITE_PARAM} ${QA_SUITE_TYPE_PARAM} ${SKIP_TAGS}

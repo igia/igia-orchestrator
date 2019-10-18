@@ -21,7 +21,7 @@ platform_url: "https://github.com/"
 platform_group: igia
 
 ## Version of the Platform to deploy
-platform_version: master
+platform_version: release_0.3.2RC2
 
 ## Optional components which are selected for deployment
 selected_optional_components:
@@ -48,6 +48,13 @@ selected_optional_components:
   - igia-camunda-postgresql
   - caremanagement
   - caremanagement-postgresql
+  - igia-i2b2-postgresql
+  - igia-i2b2-python-delete-data
+  - igia-i2b2-wildfly
+  - igia-i2b2-web
+  - igia-i2b2-cdi-postgresql
+  - igia-i2b2-cdi-sftp
+  - igia-i2b2-cdi-app
   - portainer
 
 ## Add-ons
@@ -61,6 +68,13 @@ deploy_env: docker
 docker_compose_files_path: "{{ playbook_dir }}/../docker-compose/local-dev"
 ## Local directory to pull source codes for build
 deploy_dir: ~/igia-apps/
+
+## Deployed environment QA suite execution after launch
+platform_components_qa_suite_execution: false
+## QA suite type to execute - karate | protractor | all
+qa_suite_type: all
+## components to be skipped for QA suite execution
+selected_components_skip_qa: []
 
 ## ActiveMQ SSL configuration - Integration applications stack
 # The preconfigured SSLs can be used by default. If this option is not set, the existing certs will be used and below options will be ignored.

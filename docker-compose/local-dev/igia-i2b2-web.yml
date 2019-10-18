@@ -11,15 +11,20 @@
 # Copyright (C) 2018-2019 Persistent Systems, Inc.
 #
 
----
-## Optional components which are selected for sample-app stack deployment
-selected_optional_components:
-  - igia-keycloak
-  - cha2ds2-vasc-api
-  - cha2ds2-vasc-api-postgresql
-  - cha2ds2-vasc-application
-  - cha2ds2-vasc-application-postgresql
-  - portainer
+version: '3.2'
 
-selected_components_skip_qa:
-  - igia-keycloak
+services:
+  i2b2-web:
+    image: i2b2/i2b2-web:p1
+    command: /run-httpd.sh localhost
+    ports:
+      - "${I2B2_WEB_HTTP_PORT:-8086}:80"
+      - "${I2B2_WEB_HTTPS_PORT:-8443}:443"
+    networks:
+      - i2b2net
+    depends_on:
+      - i2b2-wildfly
+
+networks: 
+    i2b2net:
+       driver: bridge

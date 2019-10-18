@@ -68,9 +68,10 @@ igia Orchestrator provides following pre-configured stacks:
 ```bash
 1. igia-Platform                    -   Deploy all igia platform components
 2. Integration Applications         -   Deploy Integration components
-3. Sample Applications              -   Deploy Sample application components
-4. SMART-on-FHIR Applications       -   Deploy Smart on FHIR application components
-5. Workflow Applications            -   Deploy Workflow components
+3. i2b2-cdi-ext Applications        -   Deploy i2b2 clinical data infrastructure components
+4. Sample Applications              -   Deploy Sample application components
+5. SMART-on-FHIR Applications       -   Deploy Smart on FHIR application components
+6. Workflow Applications            -   Deploy Workflow components
 ```
 
 ### Add new stack configuration
@@ -93,13 +94,13 @@ igia Orchestrator provides following pre-configured stacks:
 2. Add a new label in the `start.sh` to briefly describe custom stack. This label will be visible during stack selection.
 
     ```bash
-    echo "5. Workflow Applications"
+    echo "6. Workflow Applications"
     ```
 
 3. Add a case in `start.sh` in sequence. Sequence number should match the label sequence specified in the above step.
 
     ```bash
-    5)  CUSTOM_VAR_FILE_PATH="${STACK_PATH}/workflow.yml"
+    6)  CUSTOM_VAR_FILE_PATH="${STACK_PATH}/workflow.yml"
             break ;;
     ```
 
@@ -112,27 +113,39 @@ This script will run ansible playbook to clone, build, and deploy all igia compo
 
 please press any key to start...
 
-Do you need to skip one or more steps (N/y)?
+Do you need to skip one or more steps (N/y)? 
 
-Which path to use to place code (Default: ../..)?
+Which path to use to place code (Default: ../..)? 
 
 Deployment stack
 
 1. igia-Platform
 2. Integration Applications
-3. Sample Applications
-4. SMART-on-FHIR Applications
-5. Workflow Applications
-6. Stack with custom config file
+3. i2b2-cdi-ext Applications
+4. Sample Applications
+5. SMART-on-FHIR Applications
+6. Workflow Applications
+7. Stack with custom config file
 
-Choose deployment stack option (Default: 1)? 4
+Choose deployment stack option (Default: 1)? 5
 
 Add-ons
 
 Do you want to enable logstash logging (N/y)? y
-Do you want to enable zipkin tracing (N/y)?
+Do you want to enable zipkin tracing (N/y)? 
+Do you want to enable tests execution to verify components against QA suite (N/y)? y
 
-Running the command: ansible-playbook ./cli/../ansible-playbooks/site.yml -e deploy_dir=../.. -e @./cli/stack/smart-on-fhir.yml -e tracing_zipkin_enabled=false -e logging_logstash_enabled=true
+QA suite type
+
+1. All
+2. Karate
+3. Protractor
+4. Service
+
+Choose QA suite type option (Default: 1)? 1
+
+Running the command: ansible-playbook ./../ansible-playbooks/site.yml -e deploy_dir=../.. -e @./stack/smart-on-fhir.yml -e tracing_zipkin_enabled=false -e logging_logstash_enabled=true -e platform_components_qa_suite_execution=true -e qa_suite_type=all 
+
 ```
 
 You can refer `cli/stack/custom.yml` to create custom deployment stack. By default, it contains all platform components.
@@ -157,6 +170,7 @@ igia Orchestrator exposes deployed services to the ports listed below. If the po
 |9085|Camunda UI|CAMUNDA_PORT|
 |9411|Zipkin UI|ZIPKIN_PORT|
 |12000-12100|Port range for Integration worker|INTEGRATION_WORKER_PORT_RANGE|
+|8086|i2b2 web application|I2B2_WEB_HTTP_PORT|
 
 ## Adding a new component to igia-orchestrator
 
