@@ -11,15 +11,21 @@
 # Copyright (C) 2018-2019 Persistent Systems, Inc.
 #
 
----
-## Optional components which are selected for sample-app stack deployment
-selected_optional_components:
-  - igia-keycloak
-  - cha2ds2-vasc-api
-  - cha2ds2-vasc-api-postgresql
-  - cha2ds2-vasc-application
-  - cha2ds2-vasc-application-postgresql
-  - portainer
+version: '3.2'
 
-selected_components_skip_qa:
-  - igia-keycloak
+services:
+  i2b2-cdi-sftp:
+    image: atmoz/sftp
+    command: ${SFTP_USER:-i2b2sftpuser}:${SFTP_PASS:-i2b2sftppass}:1001::concept,data
+    #volumes:
+    #   - "./sftpdata/concept:/home/${SFTP_USER:-i2b2sftpuser}/concept"
+    #   - "./sftpdata/data:/home/${SFTP_USER:-i2b2sftpuser}/data"
+    ports:
+      - "${I2B2_CDI_SFTP_PORT:-2222}:22"
+    networks:
+      - i2b2net
+
+networks: 
+    i2b2net:
+       driver: bridge
+      

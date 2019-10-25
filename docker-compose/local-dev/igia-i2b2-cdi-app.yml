@@ -1,0 +1,51 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+version: '3.2'
+
+services:
+  i2b2-cdi-app:
+        image: igia/i2b2-cdi-app:latest
+        volumes:
+            - /opt/igia/concept
+            - /opt/igia/data
+        environment:
+            - SPRING_PROFILES_ACTIVE=prod
+            - APP_DATASOURCE_POSTGRESQL_URL=jdbc:postgresql://i2b2-cdi-postgresql:5432/clinical_data_infrastructure
+            - APP_DATASOURCE_POSTGRESQL_USERNAME=${I2B2_CDI_APP_POSTGRESQL_USERNAME:-igia}
+            - APP_DATASOURCE_POSTGRESQL_PASSWORD=${I2B2_CDI_APP_POSTGRESQL_PASSWORD:-igiaPwd}
+            - APP_DATASOURCE_POSTGRESQL_DRIVER=com.zaxxer.hikari.HikariDataSource
+            - APP_DATASOURCE_I2B2_URL=jdbc:postgresql://i2b2-pg:5432/i2b2
+            - APP_DATASOURCE_I2B2_USERNAME=${I2B2_POSTGRESQL_USERNAME:-i2b2}
+            - APP_DATASOURCE_I2B2_PASSWORD=${I2B2_POSTGRESQL_PASSWORD:-demouser}
+            - APP_DATASOURCE_I2B2_DRIVER=com.zaxxer.hikari.HikariDataSource
+            - APP_LOGGING_LOGSTASH_ENABLED=${LOGGING_LOGSTASH_ENABLED:-false}
+            - APP_LOGGING_LOGSTASH_METRICSENABLED=${LOGGING_LOGSTASH_ENABLED:-false}
+            - INTEGRATION_SFTP_REMOTEDIRPATHCONCEPT=/concept/
+            - INTEGRATION_SFTP_REMOTEDIRPATHDATA=/data/
+            - INTEGRATION_SFTP_LOCALDIRPATHCONCEPT=/opt/igia/concept
+            - INTEGRATION_SFTP_LOCALDIRPATHDATA=/opt/igia/data
+            - INTEGRATION_SFTP_HOST=i2b2-cdi-sftp
+            - INTEGRATION_SFTP_PORT=22
+            - INTEGRATION_SFTP_USER=${SFTP_USER:-i2b2sftpuser}
+            - INTEGRATION_SFTP_PASSWORD=${SFTP_PASS:-i2b2sftppass}
+        depends_on:
+            - i2b2-cdi-postgresql
+            - i2b2-cdi-sftp
+        networks:
+            - i2b2net  
+
+networks: 
+    i2b2net:
+       driver: bridge
+

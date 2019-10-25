@@ -43,6 +43,7 @@ igia-Orchestrator (and more specifically igia-deployer role) can be tested with 
 Then, run following command:
 
 ```bash
+export STACK_FILE=workflow.yml		# For workflow stack, we have workflow.yml under `../cli/stack/`
 cd anisble-playbooks/roles/igia-deployer
-molecule test
+molecule test -s igia-deployer
 ```

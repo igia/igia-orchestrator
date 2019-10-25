@@ -1,0 +1,45 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+- name: Prepare | Cleanup
+  hosts: localhost
+  gather_facts: true
+  vars:
+    docker_compose_files_path: "{{ playbook_dir }}/../../../../../docker-compose/local-dev/"
+    deploy_dir: "~/molecule-ci/igia-apps/"
+
+  tasks:
+    - name: Get list of component's docker-compose.yml
+      find:
+        paths: "{{ docker_compose_files_path }}"
+        file_type: file
+        patterns: '*.yml'
+      register: platform_components
+
+    # docker-compose stack clean up
+    - name: run docker-compose down to unstack the applications
+      command: >
+       docker-compose {% for component in platform_components.files %} -f {{ component.path | basename }} {% endfor %} down
+      args:
+        chdir: "{{ docker_compose_files_path }}"
+      register: command_output
+
+    # Clean up clones - igia-platform apps
+    - name: remove project directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_fileglob:
+        - "{{ deploy_dir }}"
+      ignore_errors: true

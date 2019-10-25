@@ -1,0 +1,29 @@
+#
+# This Source Code Form is subject to the terms of the Mozilla Public License, v.
+# 2.0 with a Healthcare Disclaimer.
+# A copy of the Mozilla Public License, v. 2.0 with the Healthcare Disclaimer can
+# be found under the top level directory, named LICENSE.
+# If a copy of the MPL was not distributed with this file, You can obtain one at
+# http://mozilla.org/MPL/2.0/.
+# If a copy of the Healthcare Disclaimer was not distributed with this file, You
+# can obtain one at the project website https://github.com/igia.
+#
+# Copyright (C) 2018-2019 Persistent Systems, Inc.
+#
+
+---
+- name: Converge
+  hosts: all
+  vars_files:
+    - "{{ '../../../../../cli/stack/' + lookup('env', 'STACK_FILE') }}"
+  roles:
+    - role: igia-deployer
+      docker_compose_files_path: "{{ playbook_dir }}/../../../../../docker-compose/local-dev/"
+      platform_url: "{{ lookup('env','PLATFORM_URL') }}"
+      platform_group: "{{ lookup('env','PLATFORM_GROUP') }}"
+      platform_version: "{{ lookup('env','PLATFORM_VERSION') }}"
+      logging_logstash_enabled: "{{ lookup('env','ENABLE_MONITORING') }}"
+      tracing_zipkin_enabled: "{{ lookup('env','ENABLE_MONITORING') }}"
+      deploy_dir: "~/molecule-ci/igia-apps/"
+      platform_components_qa_suite_execution: "{{ lookup('env','PLATFORM_QA_SUITE_EXECUTION') }}"
+      qa_suite_type: "{{ lookup('env','QA_SUITE_TYPE') }}"

@@ -23,3 +23,5 @@ selected_optional_components:
   - caremanagement-postgresql
   - portainer
 
+selected_components_skip_qa:
+  - igia-keycloak

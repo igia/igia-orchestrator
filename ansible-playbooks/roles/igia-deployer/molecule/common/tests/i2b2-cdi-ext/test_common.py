@@ -11,15 +11,22 @@
 # Copyright (C) 2018-2019 Persistent Systems, Inc.
 #
 
----
-## Optional components which are selected for sample-app stack deployment
-selected_optional_components:
-  - igia-keycloak
-  - cha2ds2-vasc-api
-  - cha2ds2-vasc-api-postgresql
-  - cha2ds2-vasc-application
-  - cha2ds2-vasc-application-postgresql
-  - portainer
+# import os
 
-selected_components_skip_qa:
-  - igia-keycloak
+import requests
+# import testinfra.utils.ansible_runner
+
+# testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
+#   os.environ['MOLECULE_INVENTORY_FILE']).get_hosts('all')
+
+# def test_hosts_file(host):
+#     f = host.file('/etc/hosts')
+
+#     assert f.exists
+#     assert f.user == 'root'
+#     assert f.group == 'root'
+
+def test_landing_page():
+    url = "http://localhost:8888"
+    response = requests.request("GET", url)
+    assert response.status_code == 200

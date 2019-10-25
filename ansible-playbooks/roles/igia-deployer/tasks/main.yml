@@ -61,12 +61,9 @@
   tags: deploy
 
 - name: Wait 360 seconds for Gateway to be accessible
-  vars:
-    components: "{{ mandatory_components + selected_optional_components }}"
-    application: "igia-apigateway"
-  when: 'application in components'
+  when: '"igia-apigateway" in mandatory_components + selected_optional_components'
   uri:
-    url: http://localhost:8088/management/health
+    url: "http://localhost:{{ lookup('env','APIGTW_PORT') | default('8088', true) }}/management/health"
     return_content: yes
   register: result
   until: result['status']|default(0) == 200
@@ -78,8 +75,9 @@
     - verify
 
 - name: Wait 360 seconds for Keycloak to be accessible
+  when: '"igia-keycloak" in mandatory_components + selected_optional_components'
   uri:
-    url: http://keycloak:9080/auth
+    url: "http://keycloak:{{ lookup('env','KEYCLOAK_PORT') | default('9080', true) }}/auth"
     return_content: yes
   register: result
   until: result['status']|default(0) == 200
@@ -97,6 +95,7 @@
         -script /opt/jboss/keycloak/realm-config/update.sql && ./keycloak/bin/kcadm.sh config credentials \
          --server http://keycloak:9080/auth --realm master --user admin --password admin && \
          ./keycloak/bin/kcadm.sh  update clients/ed424acd-36ce-433e-bf59-f1f3143faf6f -r igia -s enabled=true --merge"
+  when: '"igia-keycloak" in mandatory_components + selected_optional_components'
   tags:
     - deploy
   changed_when: false
@@ -104,12 +103,12 @@
 - name: Keycloak client update - igia_sample_app
   keycloak_client:
     auth_client_id: admin-cli
-    auth_keycloak_url: "http://keycloak:9080/auth"
+    auth_keycloak_url: "http://keycloak:{{ lookup('env','KEYCLOAK_PORT') | default('9080', true) }}/auth"
     auth_realm: master
     auth_username: admin
     auth_password: admin
-    root_url: http://localhost:8055
-    admin_url: http://localhost:8055
+    root_url: "http://localhost:{{ lookup('env','SAMPLE_APP_PORT') | default('8055', true) }}"
+    admin_url: "http://localhost:{{ lookup('env','SAMPLE_APP_PORT') | default('8055', true) }}"
     state: present
     realm: igia
     client_id: igia_sample_app
@@ -118,8 +117,28 @@
     client_authenticator_type: client-secret
     secret: igia_sample_app
     redirect_uris:
-      - http://localhost:8055/*
+      - "http://localhost:{{ lookup('env','SAMPLE_APP_PORT') | default('8055', true) }}/*"
   delegate_to: localhost
   when: '"cha2ds2-vasc-application" in selected_optional_components'
   tags:
     - deploy
+
+- name: wait for 180 seconds and continue with qa suite execution
+  wait_for:
+    timeout: 180
+  delegate_to: localhost
+  when: platform_components_qa_suite_execution | bool
+  tags:
+    - verify
+
+- name: check if any igia component qa suite execution to be skipped
+  set_fact:
+    selected_qa_suite_components: "{{ mandatory_components + selected_optional_components | difference(selected_components_skip_qa) }}"
+
+- vars:
+    projects: "{{ item }}"
+  include_tasks: verify-apps.yml
+  loop: "{{ apps | selectattr('app_name','in', selected_qa_suite_components) | batch(2) | list }}"
+  when: platform_components_qa_suite_execution | bool
+  tags:
+    - verify
