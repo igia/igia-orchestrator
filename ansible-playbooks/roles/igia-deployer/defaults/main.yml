@@ -21,7 +21,7 @@ platform_url: "https://github.com/"
 platform_group: igia
 
 ## Version of the Platform to deploy
-platform_version: release_0.3.2RC2
+platform_version: master
 
 ## Optional components which are selected for deployment
 selected_optional_components:
