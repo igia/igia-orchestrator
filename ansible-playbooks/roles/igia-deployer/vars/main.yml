@@ -108,7 +108,7 @@ apps:
     verify_command: ./mvnw test -DTest=KarateTestRunner
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/i2b2-cdi-ext.git"
-    repo_ref: "release_0.3.1RC2"
+    repo_ref: "{{ platform_version }}"
     app_name: igia-i2b2-cdi-app
     build_command: ./mvnw -Pprod package
     qa_suite: "service"
