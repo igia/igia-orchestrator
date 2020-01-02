@@ -31,8 +31,8 @@ services:
             - JHIPSTER_LOGGING_LOGSTASH_ENABLED=${LOGGING_LOGSTASH_ENABLED:-false}
             - SPRING_ZIPKIN_ENABLED=${TRACING_ZIPKIN_ENABLED:-false}
             - '_JAVA_OPTIONS=-Xmx400m'
-        #ports:
-        #    - "8054:8054"
+        ports:
+            - "${SAMPLE_APP_API_PORT:-8054}:8054"
         depends_on:
             - jhipster-registry
             - keycloak

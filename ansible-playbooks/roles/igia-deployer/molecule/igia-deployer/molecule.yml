@@ -34,6 +34,11 @@ platforms:
       - "vm.network 'forwarded_port', guest: 8761, host: 8761"
       - "vm.network 'forwarded_port', guest: 8888, host: 8888"
       - "vm.network 'forwarded_port', guest: 9080, host: 9080"
+      - "vm.network 'forwarded_port', guest: 5601, host: 5601"
+      - "vm.network 'forwarded_port', guest: 5000, host: 5000"
+      - "vm.network 'forwarded_port', guest: 9411, host: 9411"
+      - "vm.network 'forwarded_port', guest: 8086, host: 8086"
+      - "vm.network 'forwarded_port', guest: 9081, host: 9081"
 #    provider_override_args:
 #      - "vm.provision 'shell', inline: 'curl https://bootstrap.pypa.io/get-pip.py  | python --user' "
 provisioner:

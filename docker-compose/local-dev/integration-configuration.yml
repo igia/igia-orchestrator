@@ -46,10 +46,20 @@ services:
             - JHIPSTER_LOGGING_LOGSTASH_ENABLED=${LOGGING_LOGSTASH_ENABLED:-false}
             - SPRING_ZIPKIN_ENABLED=${TRACING_ZIPKIN_ENABLED:-false}
             - '_JAVA_OPTIONS=-Xmx400m'
-        #ports:
-        #    - '8050:8050'
+        ports:
+            - '8050:8050'
         depends_on:
             - jhipster-registry
             - activemq
             - integrationconfiguration-postgresql
-            
+            - integration-app-sftp
+
+    integration-app-sftp:
+        image: atmoz/sftp
+        command: ${INTEGRATION_SFTP_USER:-igia}:${INTEGRATION_SFTP_PASS:-integration}:1001::sftp-input,sftp-output
+        volumes:
+            - "/tmp/igia-sftp/sftp-input:/home/${INTEGRATION_SFTP_USER:-igia}/sftp-input"
+            - "/tmp/igia-sftp/sftp-output:/home/${INTEGRATION_SFTP_USER:-igia}/sftp-output"
+        ports:
+            - "${INTEGRATION_APP_SFTP_PORT:-2223}:22"
+
