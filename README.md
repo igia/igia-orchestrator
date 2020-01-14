@@ -115,7 +115,7 @@ please press any key to start...
 
 Do you need to skip one or more steps (N/y)? 
 
-Which path to use to place code (Default: ../..)? 
+Which path to use to place or refer code (Default: ../..)? 
 
 Deployment stack
 

@@ -63,7 +63,7 @@ apps:
     app_name: integration-configuration
     build_command: ./mvnw clean package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
     qa_suite: "karate"
-    verify_command: ./mvnw test -DTest=KarateTestRunner
+    verify_command: ./mvnw test -Dtest=KarateTestRunner
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/integration-worker.git"
     repo_ref: "{{ platform_version }}"
@@ -84,7 +84,7 @@ apps:
     app_name: cha2ds2-vasc-api
     build_command: ./mvnw clean package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
     qa_suite: "karate"
-    verify_command: ./mvnw test -DTest=KarateTestRunner
+    verify_command: ./mvnw test -Dtest=KarateTestRunner
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/cha2ds2-vasc-application.git"
     repo_ref: "{{ platform_version }}"
@@ -105,7 +105,7 @@ apps:
     app_name: caremanagement
     build_command: ./mvnw clean package -Pprod,swagger,zipkin -DskipTests=true jib:dockerBuild
     qa_suite: "karate"
-    verify_command: ./mvnw test -DTest=KarateTestRunner
+    verify_command: ./mvnw test -Dtest=KarateTestRunner
 
   - repo_url: "{{ platform_url }}{{ platform_group }}/i2b2-cdi-ext.git"
     repo_ref: "{{ platform_version }}"

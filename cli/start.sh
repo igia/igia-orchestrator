@@ -65,11 +65,9 @@ case $SKIP in
 # Allow users to customize the location where codes are to be placed if both fetch and buiild are not skipped
 DEFAULT_DEPLOY_DIR="../.."
 DEPLOY_DIR_PARAM=""
-if [[ -z ${SKIP_FETCH} || -z ${SKIP_BUILD} ]]; then
-    echo
-    read -p "Which path to use to place code (Default: ${DEFAULT_DEPLOY_DIR})? " DEPLOY_DIR
-    DEPLOY_DIR_PARAM="-e deploy_dir=${DEPLOY_DIR:-${DEFAULT_DEPLOY_DIR}}"
-fi
+echo
+read -p "Which path to use to place or refer code (Default: ${DEFAULT_DEPLOY_DIR})? " DEPLOY_DIR
+DEPLOY_DIR_PARAM="-e deploy_dir=${DEPLOY_DIR:-${DEFAULT_DEPLOY_DIR}}"
 
 # Allow users to specify specific stack if they need to override default values
 CUSTOM_VAR_FILE_PARAM=""
@@ -129,29 +127,37 @@ echo
 echo "Add-ons"
 echo
 
-LOGGING_PARAM=""
-read -p "Do you want to enable logstash logging (N/y)? " LOGGING_OPT
-case $LOGGING_OPT in
-    y|Y|YES|yes|Yes)        
-        LOGGING_PARAM="-e logging_logstash_enabled=true"
-        ;;
+case $SKIP_DEPLOY in 
+	''|n|N|NO|no|No)
 
+	LOGGING_PARAM=""
+	read -p "Do you want to enable logstash logging (N/y)? " LOGGING_OPT
+	case $LOGGING_OPT in
+	    y|Y|YES|yes|Yes)        
+	        LOGGING_PARAM="-e logging_logstash_enabled=true"
+	        ;;
+	
+	    *)
+	        LOGGING_PARAM="-e logging_logstash_enabled=false"
+	        ;;
+	esac
+	
+	TRACING_PARAM=""
+	read -p "Do you want to enable zipkin tracing (N/y)? " TRACING_OPT
+	case $TRACING_OPT in
+	    y|Y|YES|yes|Yes)        
+	        TRACING_PARAM="-e tracing_zipkin_enabled=true"
+	        ;;
+	
+	    *)
+	        TRACING_PARAM="-e tracing_zipkin_enabled=false"
+	        ;;
+	esac
+    	;;
     *)
-        LOGGING_PARAM="-e logging_logstash_enabled=false"
-        ;;
+    ;;
 esac
 
-TRACING_PARAM=""
-read -p "Do you want to enable zipkin tracing (N/y)? " TRACING_OPT
-case $TRACING_OPT in
-    y|Y|YES|yes|Yes)        
-        TRACING_PARAM="-e tracing_zipkin_enabled=true"
-        ;;
-
-    *)
-        TRACING_PARAM="-e tracing_zipkin_enabled=false"
-        ;;
-esac
 
 QA_SELECT=""
 QA_SUITE_PARAM=""
